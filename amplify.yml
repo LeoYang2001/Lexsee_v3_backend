@@ -9,7 +9,7 @@ frontend:
   phases:
     build:
       commands:
-        - echo "Skipping frontend build"
+        - npm run build
   artifacts:
     baseDirectory: dist
     files:
@@ -18,16 +18,3 @@ frontend:
     paths:
       - .npm/**/*
       - node_modules/**/*
-# frontend:
-#   phases:
-#     build:
-#       commands:
-#         - npm run build
-#   artifacts:
-#     baseDirectory: dist
-#     files:
-#       - '**/*'
-#   cache:
-#     paths:
-#       - .npm/**/*
-#       - node_modules/**/*
