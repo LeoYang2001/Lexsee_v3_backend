@@ -1,17 +1,255 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
-/*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any user authenticated via an API key can "create", "read",
-"update", and "delete" any "Todo" records.
-=========================================================================*/
+// UserProfile is the central point for a user's data.
+export const UserProfile = a
+  .model({
+    // The userId is the unique identifier for the user.
+    userId: a.string().required(),
+    // The username is a new field for the user's name.
+    username: a.string().required(),
+    // A single wordsList belongs to each user profile.
+    wordsList: a.hasOne("WordsList", "userProfileId"),
+
+    ifChineseUser: a.boolean(),
+
+    // All review schedules for this user (one per date).
+    reviewSchedules: a.hasMany("ReviewSchedule", "userProfileId"),
+
+    completedReviewSchedules: a.hasMany(
+      "CompletedReviewSchedule",
+      "userProfileId",
+    ),
+
+    // Link SearchHistory and BadgeList back to UserProfile so @belongsTo mappings resolve.
+    // These mirror the belongsTo('UserProfile', 'userProfileId') used in those models.
+    searchHistories: a.hasMany("SearchHistory", "userProfileId"),
+    // fixed: track badge lists for this profile
+    badgeLists: a.hasMany("BadgeList", "userProfileId"),
+
+    // Add per-user UserBadge relation so UserBadge.belongsTo(UserProfile, 'userProfileId') resolves
+    userBadges: a.hasMany("UserBadge", "userProfileId"),
+  })
+  .authorization((allow) => [
+    // This allows the owner to perform all operations on their profile.
+    allow.owner(),
+  ]);
+
+// WordsList is now the single container for a user's words.
+export const WordsList = a
+  .model({
+    // The foreign key to link this list to its parent UserProfile.
+    userProfileId: a.id(),
+    // The belongsTo relationship defines the link back to the parent.
+    userProfile: a.belongsTo("UserProfile", "userProfileId"),
+    // This provides a link to all the Word records belonging to this list.
+    words: a.hasMany("Word", "wordsListId"),
+  })
+  .authorization((allow) => [allow.owner()]);
+
+// The Word model now includes a 'status' field to differentiate words.
+export const Word = a
+  .model({
+    // The data field stores the word's content.
+    data: a.json().required(),
+    // The new status field, which is an enum with predefined values.
+    status: a.enum(["COLLECTED", "LEARNED"]), // Added `.required()`
+    // The foreign key to link this word to its parent WordsList.
+    wordsListId: a.id(),
+    // The belongsTo relationship links the word to its WordsList container.
+    wordsList: a.belongsTo("WordsList", "wordsListId"),
+    scheduleWords: a.hasMany("ReviewScheduleWord", "wordId"),
+  })
+  .authorization((allow) => [allow.owner()]);
+
+/**
+ * ReviewSchedule: one review session per user per date.
+ * Example: a row for (user, "2025-11-04") with its notification + summary stats.
+ */
+export const CompletedReviewSchedule = a
+  .model({
+    // Owner of this schedule.
+    userProfileId: a.id().required(),
+    userProfile: a.belongsTo("UserProfile", "userProfileId"),
+
+    // e.g. "2025-11-04" – matches your previous JSON keys.
+    scheduleDate: a.string().required(),
+
+    // Expo local notification id for this day's reminder.
+    notificationId: a.string(),
+
+    // --- Schedule-level info (summary for that date) ---
+
+    // 0–100 success percentage for that session.
+    successRate: a.float(),
+
+    // Total number of words in this session.
+    totalWords: a.integer(),
+
+    // Count of words already reviewed.
+    reviewedCount: a.integer(),
+
+    // Count of words still to be reviewed.
+    toBeReviewedCount: a.integer(),
+
+    // Optional flexible blob if you want to store extra summary info.
+    // e.g. { averageScore: 4.2, averageTimePerCard: 3.1, ... }
+    scheduleInfo: a.json(),
+
+    // All words that belong to this schedule (per-word review entries).
+    scheduleWords: a.hasMany("ReviewScheduleWord", "completedReviewScheduleId"),
+  })
+  .authorization((allow) => [allow.owner()]);
+
+/**
+ * ReviewSchedule: one review session per user per date.
+ * Example: a row for (user, "2025-11-04") with its notification + summary stats.
+ */
+export const ReviewSchedule = a
+  .model({
+    // Owner of this schedule.
+    userProfileId: a.id().required(),
+    userProfile: a.belongsTo("UserProfile", "userProfileId"),
+
+    // e.g. "2025-11-04" – matches your previous JSON keys.
+    scheduleDate: a.string().required(),
+
+    // Expo local notification id for this day's reminder.
+    notificationId: a.string(),
+
+    // --- Schedule-level info (summary for that date) ---
+
+    // 0–100 success percentage for that session.
+    successRate: a.float(),
+
+    // Total number of words in this session.
+    totalWords: a.integer(),
+
+    // Count of words already reviewed.
+    reviewedCount: a.integer(),
+
+    // Count of words still to be reviewed.
+    toBeReviewedCount: a.integer(),
+
+    // Optional flexible blob if you want to store extra summary info.
+    // e.g. { averageScore: 4.2, averageTimePerCard: 3.1, ... }
+    scheduleInfo: a.json(),
+
+    // All words that belong to this schedule (per-word review entries).
+    scheduleWords: a.hasMany("ReviewScheduleWord", "reviewScheduleId"),
+  })
+  .authorization((allow) => [allow.owner()]);
+
+/**
+ * ReviewScheduleWord: one row per (schedule, word) with per-word review info.
+ * This replaces your old "reviewWordIds: []" array and lets you track status,
+ * score, attempts, etc., per word for that schedule.
+ */
+export const ReviewScheduleWord = a
+  .model({
+    // Parent schedule (user + date).
+    reviewScheduleId: a.id().required(),
+    reviewSchedule: a.belongsTo("ReviewSchedule", "reviewScheduleId"),
+
+    completedReviewScheduleId: a.id(),
+    completedReviewSchedule: a.belongsTo(
+      "CompletedReviewSchedule",
+      "completedReviewScheduleId",
+    ),
+
+    // Which word is being reviewed in this schedule.
+    wordId: a.id().required(),
+    word: a.belongsTo("Word", "wordId"),
+
+    // Whether this word is still pending or already reviewed for this session.
+    status: a.enum(["TO_REVIEW", "REVIEWED"]),
+
+    // Per-word review score, e.g. 0–5 based on how well they remembered it.
+    score: a.integer(),
+
+    // When this word was answered in this schedule (ISO string or datetime).
+    answeredAt: a.string(),
+
+    // Flexible metadata for detailed history if needed:
+    // e.g. { timeSpentSec: 3.5, userAnswer: "xxx", isCorrect: true }
+    meta: a.json(),
+  })
+  .authorization((allow) => [allow.owner()]);
+
+// this searchHistory list is to track the most 10 recent searched words by the user
+export const SearchHistory = a
+  .model({
+    userProfileId: a.id().required(),
+    userProfile: a.belongsTo("UserProfile", "userProfileId"),
+    searchedWords: a.json(),
+  })
+  .authorization((allow) => [allow.owner()]);
+
+// UserBadge: per-user record that links a user to a GlobalAward plus acquisition metadata.
+export const UserBadge = a
+  .model({
+    // Link back to the owning UserProfile
+    userProfileId: a.id().required(),
+    userProfile: a.belongsTo("UserProfile", "userProfileId"),
+
+    // Link to the GlobalAward (uses the GlobalAward's autogenerated id)
+    globalAwardId: a.id().required(),
+    globalAward: a.belongsTo("GlobalAward", "globalAwardId"),
+
+    // When the user acquired the badge
+    acquiredAt: a.string(),
+
+    // new: link back to a BadgeList entry (per-user container)
+    badgeListId: a.id(),
+    badgeList: a.belongsTo("BadgeList", "badgeListId"),
+
+    // Optional flag for whether the badge is active / visible
+    isActive: a.boolean().default(true),
+
+    // Optional per-user metadata (progress, counts, notes, etc.)
+    meta: a.json(),
+  })
+  .authorization((allow) => [allow.owner()]);
+
+// this badge list is to track the badges earned by the user
+export const BadgeList = a
+  .model({
+    userProfileId: a.id().required(),
+    userProfile: a.belongsTo("UserProfile", "userProfileId"),
+
+    // track per-user UserBadge records that belong to this BadgeList
+    userBadges: a.hasMany("UserBadge", "badgeListId"),
+  })
+  .authorization((allow) => [allow.owner()]);
+
+// GlobalAward model to define awards available in the system
+export const GlobalAward = a
+  .model({
+    awardId: a.string().required(), // e.g., "FAST_LEARNER"
+    title: a.string().required(),
+    description: a.string(),
+    activatedImageUrl: a.string().required(),
+    deactivatedImageUrl: a.string().required(),
+    gifAnimationUrl: a.string(),
+
+    // link back to per-user UserBadge records that reference this GlobalAward
+    userBadges: a.hasMany("UserBadge", "globalAwardId"),
+  })
+  .authorization((allow) => [
+    allow.authenticated().to(["read"]),
+    // Only allow admin/backend access for creation (optional)
+  ]);
+
 const schema = a.schema({
-  Todo: a
-    .model({
-      content: a.string(),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
+  UserProfile,
+  WordsList,
+  Word,
+  ReviewSchedule,
+  ReviewScheduleWord,
+  SearchHistory,
+  BadgeList,
+  UserBadge,
+  GlobalAward,
+  CompletedReviewSchedule,
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -19,39 +257,6 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: "apiKey",
-    // API Key is used for a.allow.public() rules
-    apiKeyAuthorizationMode: {
-      expiresInDays: 30,
-    },
+    defaultAuthorizationMode: "userPool",
   },
 });
-
-/*== STEP 2 ===============================================================
-Go to your frontend source code. From your client-side code, generate a
-Data client to make CRUDL requests to your table. (THIS SNIPPET WILL ONLY
-WORK IN THE FRONTEND CODE FILE.)
-
-Using JavaScript or Next.js React Server Components, Middleware, Server 
-Actions or Pages Router? Review how to generate Data clients for those use
-cases: https://docs.amplify.aws/gen2/build-a-backend/data/connect-to-API/
-=========================================================================*/
-
-/*
-"use client"
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "@/amplify/data/resource";
-
-const client = generateClient<Schema>() // use this Data client for CRUDL requests
-*/
-
-/*== STEP 3 ===============================================================
-Fetch records from the database and use them in your frontend component.
-(THIS SNIPPET WILL ONLY WORK IN THE FRONTEND CODE FILE.)
-=========================================================================*/
-
-/* For example, in a React component, you can use this snippet in your
-  function's RETURN statement */
-// const { data: todos } = await client.models.Todo.list()
-
-// return <ul>{todos.map(todo => <li key={todo.id}>{todo.content}</li>)}</ul>
