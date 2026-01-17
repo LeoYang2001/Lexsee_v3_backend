@@ -10,6 +10,10 @@ frontend:
     build:
       commands:
         - echo "Skipping frontend build"
+  artifacts:
+    baseDirectory: dist
+    files:
+      - "**/*"
 # frontend:
 #   phases:
 #     build:
