@@ -10,6 +10,9 @@ export const UserProfile = a
     // A single wordsList belongs to each user profile.
     wordsList: a.hasOne("WordsList", "userProfileId"),
 
+    // Values: 'NEW', 'FIRST_WORD_SEARCHED', 'FIRST_WORD_COLLECTED', 'FIRST_REVIEW_DONE', 'COMPLETED'
+    onboardingStage: a.string().default('NEW'),
+
 
     // All review schedules for this user (one per date).
     reviewSchedules: a.hasMany("ReviewSchedule", "userProfileId"),
