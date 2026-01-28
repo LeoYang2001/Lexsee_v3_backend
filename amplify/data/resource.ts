@@ -10,7 +10,6 @@ export const UserProfile = a
     // A single wordsList belongs to each user profile.
     wordsList: a.hasOne("WordsList", "userProfileId"),
 
-    ifChineseUser: a.boolean(),
 
     // All review schedules for this user (one per date).
     reviewSchedules: a.hasMany("ReviewSchedule", "userProfileId"),
@@ -20,9 +19,6 @@ export const UserProfile = a
       "userProfileId",
     ),
 
-    // Link SearchHistory and BadgeList back to UserProfile so @belongsTo mappings resolve.
-    // These mirror the belongsTo('UserProfile', 'userProfileId') used in those models.
-    searchHistories: a.hasMany("SearchHistory", "userProfileId"),
     // fixed: track badge lists for this profile
     badgeLists: a.hasMany("BadgeList", "userProfileId"),
 
@@ -175,14 +171,6 @@ export const ReviewScheduleWord = a
   })
   .authorization((allow) => [allow.owner()]);
 
-// this searchHistory list is to track the most 10 recent searched words by the user
-export const SearchHistory = a
-  .model({
-    userProfileId: a.id().required(),
-    userProfile: a.belongsTo("UserProfile", "userProfileId"),
-    searchedWords: a.json(),
-  })
-  .authorization((allow) => [allow.owner()]);
 
 // UserBadge: per-user record that links a user to a GlobalAward plus acquisition metadata.
 export const UserBadge = a
@@ -245,7 +233,6 @@ const schema = a.schema({
   Word,
   ReviewSchedule,
   ReviewScheduleWord,
-  SearchHistory,
   BadgeList,
   UserBadge,
   GlobalAward,
