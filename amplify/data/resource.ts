@@ -11,7 +11,7 @@ export const UserProfile = a
     wordsList: a.hasOne("WordsList", "userProfileId"),
 
     // Values: 'NEW', 'FIRST_WORD_SEARCHED', 'FIRST_WORD_COLLECTED', 'FIRST_REVIEW_DONE', 'COMPLETED'
-    onboardingStage: a.string().default('NEW'),
+    onboardingStage: a.string().default('SEARCH'),
 
 
     // All review schedules for this user (one per date).
