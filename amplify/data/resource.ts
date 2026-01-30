@@ -7,10 +7,10 @@ export const UserProfile = a
     userId: a.string().required(),
     // The username is a new field for the user's name.
     username: a.string().required(),
+    
     // A single wordsList belongs to each user profile.
     wordsList: a.hasOne("WordsList", "userProfileId"),
 
-    // Values: 'NEW', 'FIRST_WORD_SEARCHED', 'FIRST_WORD_COLLECTED', 'FIRST_REVIEW_DONE', 'COMPLETED'
     onboardingStage: a.string().default('SEARCH'),
 
 
