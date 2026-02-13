@@ -7,12 +7,11 @@ export const UserProfile = a
     userId: a.string().required(),
     // The username is a new field for the user's name.
     username: a.string().required(),
-    
+
     // A single wordsList belongs to each user profile.
     wordsList: a.hasOne("WordsList", "userProfileId"),
 
-    onboardingStage: a.string().default('SEARCH'),
-
+    onboardingStage: a.string().default("SEARCH"),
 
     // All review schedules for this user (one per date).
     reviewSchedules: a.hasMany("ReviewSchedule", "userProfileId"),
@@ -28,6 +27,7 @@ export const UserProfile = a
     // Add per-user UserBadge relation so UserBadge.belongsTo(UserProfile, 'userProfileId') resolves
     userBadges: a.hasMany("UserBadge", "userProfileId"),
   })
+  .secondaryIndexes((index) => [index("userId")])
   .authorization((allow) => [
     // This allows the owner to perform all operations on their profile.
     allow.owner(),
@@ -136,6 +136,7 @@ export const ReviewSchedule = a
     // All words that belong to this schedule (per-word review entries).
     scheduleWords: a.hasMany("ReviewScheduleWord", "reviewScheduleId"),
   })
+  .secondaryIndexes((index) => [index("userProfileId")])
   .authorization((allow) => [allow.owner()]);
 
 /**
@@ -172,8 +173,8 @@ export const ReviewScheduleWord = a
     // e.g. { timeSpentSec: 3.5, userAnswer: "xxx", isCorrect: true }
     meta: a.json(),
   })
+  .secondaryIndexes((index) => [index("reviewScheduleId")])
   .authorization((allow) => [allow.owner()]);
-
 
 // UserBadge: per-user record that links a user to a GlobalAward plus acquisition metadata.
 export const UserBadge = a
