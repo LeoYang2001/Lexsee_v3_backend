@@ -27,7 +27,7 @@ export const UserProfile = a
     // Add per-user UserBadge relation so UserBadge.belongsTo(UserProfile, 'userProfileId') resolves
     userBadges: a.hasMany("UserBadge", "userProfileId"),
   })
-  .secondaryIndexes((index) => [index("userId")])
+  .secondaryIndexes((index) => [index("userId").queryField("listByUserId")])
   .authorization((allow) => [
     // This allows the owner to perform all operations on their profile.
     allow.owner(),
