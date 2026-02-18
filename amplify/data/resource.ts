@@ -1,9 +1,7 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
-// UserProfile is the central point for a user's data.
 export const UserProfile = a
   .model({
-    // The userId is the unique identifier for the user.
     userId: a.string().required(),
     // The username is a new field for the user's name.
     username: a.string().required(),
