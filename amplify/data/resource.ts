@@ -35,6 +35,7 @@ export const UserProfile = a
   .authorization((allow) => [
     // This allows the owner to perform all operations on their profile.
     allow.owner(),
+    allow.authenticated().to(["read"]),
   ]);
 
 // WordsList is now the single container for a user's words.
