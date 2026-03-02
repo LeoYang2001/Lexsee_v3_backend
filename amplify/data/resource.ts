@@ -28,7 +28,10 @@ export const UserProfile = a
       "userProfileId",
     ),
   })
-  .secondaryIndexes((index) => [index("userId").queryField("listByUserId")])
+  .secondaryIndexes((index) => [
+    index("userId").queryField("listByUserId"),
+    index("displayName").queryField("listByDisplayName"),
+  ])
   .authorization((allow) => [
     // This allows the owner to perform all operations on their profile.
     allow.owner(),
