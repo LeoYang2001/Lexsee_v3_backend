@@ -14,6 +14,9 @@ export const UserProfile = a
     masteryIntervalDays: a.integer().default(180), // days to reach "mastery"
     newwordNotificationsEnabled: a.boolean().default(false),
 
+    overallGoal: a.integer().default(1000), // total words to learn
+    daysForGoal: a.integer().default(360), // days to reach overallGoal
+
     // A single wordsList belongs to each user profile.
     wordsList: a.hasOne("WordsList", "userProfileId"),
 
