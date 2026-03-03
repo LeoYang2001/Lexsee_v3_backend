@@ -8,7 +8,7 @@ export const UserProfile = a
     nativeLanguage: a.string(), // e.g. "zh", "zh-Hans", "es", "en"
     timezone: a.string(), // e.g. "America/Chicago" (auto-detect + confirm)
 
-    growthStyle: a.string().default("STABILITY"),
+    growthStyle: a.string().default("FLUENCY"),
     // Derived knobs (so your algorithm doesn’t hardcode constants on client)
     dailyReviewCap: a.integer().default(60), // ceiling: max reviews/day
     dailyNewWordCap: a.integer().default(3), // ceiling: max new words/day
