@@ -10,9 +10,8 @@ export const UserProfile = a
 
     growthStyle: a.string().default("FLUENCY"),
     // Derived knobs (so your algorithm doesn’t hardcode constants on client)
-    dailyReviewCap: a.integer().default(60), // ceiling: max reviews/day
-    dailyNewWordCap: a.integer().default(3), // ceiling: max new words/day
-
+    dailyPacing: a.integer().default(3), // ceiling: max new words/day
+    masteryIntervalDays: a.integer().default(180), // days to reach "mastery"
     newwordNotificationsEnabled: a.boolean().default(false),
 
     // A single wordsList belongs to each user profile.
