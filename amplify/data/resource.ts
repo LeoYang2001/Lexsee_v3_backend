@@ -71,6 +71,7 @@ export const Word = a
     // but the high-level metadata should be fields.
     meanings: a.json(), // [{partOfSpeech, definition, synonyms...}]
     exampleSentences: a.json(),
+    translatedMeanings: a.json(), // [{language, text}]
 
     // --- SRS / Data Science Fields (CRITICAL) ---
     // Pulling these out allows you to run analytics and line charts
