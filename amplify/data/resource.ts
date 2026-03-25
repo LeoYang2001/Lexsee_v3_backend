@@ -9,6 +9,8 @@ export const UserProfile = a
     timezone: a.string(), // e.g. "America/Chicago" (auto-detect + confirm)
 
     growthStyle: a.string().default("FLUENCY"),
+    expoPushToken: a.string(),
+    preferredReminderHour: a.integer().default(9),
     // Derived knobs (so your algorithm doesn’t hardcode constants on client)
     dailyPacing: a.integer().default(3), // ceiling: max new words/day
     masteryIntervalDays: a.integer().default(180), // days to reach "mastery"
