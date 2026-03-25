@@ -71,15 +71,12 @@ export const Word = a
     // but the high-level metadata should be fields.
     meanings: a.json(), // [{partOfSpeech, definition, synonyms...}]
     exampleSentences: a.json(),
-    context: a.string(), // "everyday conversation"
-    difficulty: a.string(), // "intermediate"
 
     // --- SRS / Data Science Fields (CRITICAL) ---
     // Pulling these out allows you to run analytics and line charts
     reviewInterval: a.integer().default(1),
     easeFactor: a.float().default(2.5),
-    totalReviews: a.integer().default(0),
-    lastReviewedAt: a.datetime(),
+    reviewedTimeline: a.json(), // [{reviewDate, score, timeSpentSec, ...}]
     nextReviewDate: a.string(), // Format "YYYY-MM-DD" for easy filtering
 
     // --- Relationships ---
