@@ -55,18 +55,43 @@ export const WordsList = a
 // The Word model now includes a 'status' field to differentiate words.
 export const Word = a
   .model({
-    // The data field stores the word's content.
-    data: a.json().required(),
-    // The new status field, which is an enum with predefined values.
-    status: a.enum(["COLLECTED", "LEARNED"]), // Added `.required()`
-    // The foreign key to link this word to its parent WordsList.
+    // --- Basic Content ---
+    word: a.string().required(),
+    status: a.enum(["COLLECTED", "LEARNED"]),
+
+    // --- Phonetics & Media ---
+    phoneticText: a.string(),
+    audioUrl: a.string(),
+    imgUrl: a.string(),
+
+    // --- Meanings & Context (Still JSON, but structured) ---
+    // These are rarely queried individually, so JSON is okay here,
+    // but the high-level metadata should be fields.
+    meanings: a.json(), // [{partOfSpeech, definition, synonyms...}]
+    exampleSentences: a.json(),
+    context: a.string(), // "everyday conversation"
+    difficulty: a.string(), // "intermediate"
+
+    // --- SRS / Data Science Fields (CRITICAL) ---
+    // Pulling these out allows you to run analytics and line charts
+    reviewInterval: a.integer().default(1),
+    easeFactor: a.float().default(2.5),
+    totalReviews: a.integer().default(0),
+    lastReviewedAt: a.datetime(),
+    nextReviewDate: a.string(), // Format "YYYY-MM-DD" for easy filtering
+
+    // --- Relationships ---
     wordsListId: a.id(),
-    // The belongsTo relationship links the word to its WordsList container.
     wordsList: a.belongsTo("WordsList", "wordsListId"),
     scheduleWords: a.hasMany("ReviewScheduleWord", "wordId"),
   })
+  .secondaryIndexes((index) => [
+    // This allows you to fetch "Today's Due Words" instantly
+    index("nextReviewDate").queryField("listByReviewDate"),
+    // This allows you to track "Words learned over time" for your line charts
+    index("status").queryField("listByStatus"),
+  ])
   .authorization((allow) => [allow.owner()]);
-
 /**
  * ReviewSchedule: one review session per user per date.
  * Example: a row for (user, "2025-11-04") with its notification + summary stats.
