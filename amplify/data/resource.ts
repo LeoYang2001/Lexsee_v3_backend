@@ -79,6 +79,7 @@ export const Word = a
     easeFactor: a.float().default(2.5),
     reviewedTimeline: a.json(), // [{reviewDate, score, timeSpentSec, ...}]
     nextReviewDate: a.string(), // Format "YYYY-MM-DD" for easy filtering
+    scheduledType: a.string().default("SRS_REVIEW"), // We set a default value so every word that is "due" sits in the same index bucket.
 
     // --- Relationships ---
     wordsListId: a.id(),
@@ -86,9 +87,10 @@ export const Word = a
     scheduleWords: a.hasMany("ReviewScheduleWord", "wordId"),
   })
   .secondaryIndexes((index) => [
-    // This allows you to fetch "Today's Due Words" instantly
-    index("nextReviewDate").queryField("listByReviewDate"),
-    // This allows you to track "Words learned over time" for your line charts
+    index("scheduledType")
+      .sortKeys(["nextReviewDate"])
+      .queryField("listWordsByDate"),
+
     index("status").queryField("listByStatus"),
   ])
   .authorization((allow) => [allow.owner()]);
