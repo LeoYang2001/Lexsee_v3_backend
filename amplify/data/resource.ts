@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { srsReviewNotifier } from "../functions/srs-review-notifier/resource";
 
 export const UserProfile = a
   .model({
@@ -210,14 +211,20 @@ export const ReviewScheduleWord = a
   .secondaryIndexes((index) => [index("reviewScheduleId")])
   .authorization((allow) => [allow.owner()]);
 
-const schema = a.schema({
-  UserProfile,
-  WordsList,
-  Word,
-  ReviewSchedule,
-  ReviewScheduleWord,
-  CompletedReviewSchedule,
-});
+const schema = a
+  .schema({
+    UserProfile,
+    WordsList,
+    Word,
+    ReviewSchedule,
+    ReviewScheduleWord,
+    CompletedReviewSchedule,
+  })
+  .authorization((allow) => [
+    // "query" allows the Lambda to find words (read)
+    // "mutate" allows the Lambda to update words (e.g. mark as notified)
+    allow.resource(srsReviewNotifier).to(["query", "mutate"]),
+  ]);
 
 export type Schema = ClientSchema<typeof schema>;
 
@@ -225,5 +232,6 @@ export const data = defineData({
   schema,
   authorizationModes: {
     defaultAuthorizationMode: "userPool",
+    apiKeyAuthorizationMode: { expiresInDays: 7 },
   },
 });
