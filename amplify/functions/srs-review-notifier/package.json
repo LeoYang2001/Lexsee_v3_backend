@@ -1,0 +1,8 @@
+{
+  "name": "srs-review-notifier",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "expo-server-sdk": "^6.1.0"
+  }
+}
