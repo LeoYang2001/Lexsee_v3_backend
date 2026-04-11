@@ -87,8 +87,6 @@ const schema = a
     CompletedReviewSchedule,
   })
   .authorization((allow) => [
-    // "query" allows the Lambda to find words (read)
-    // "mutate" allows the Lambda to update words (e.g. mark as notified)
     allow.resource(srsReviewNotifier).to(["query", "mutate"]),
   ]);
 
